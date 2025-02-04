@@ -1018,10 +1018,10 @@ if (import.meta.main) {
           const boot_code = [
             // First, disable all planes
             0xA9, 0x00,        // LDA #0
-            0x8D, 0x00, 0xFF,  // STA CGIA[0]
+            0x8D, 0x30, 0xFF,  // STA CGIA[#30]
             // FIXME: should really be one MVP call on 65816
-            0xA2, 0x80,        // LDX #128
-                               // LOOP:
+            0xA2, 0x7F,        // LDX #127
+            // LOOP:
             0xBD, 0x13, 0xF8,  // LDA REGS,X
             0x9D, 0x00, 0xFF,  // STA CGIA,X
             0xCA,              // DEX
@@ -1030,22 +1030,34 @@ if (import.meta.main) {
           ];
           // prettier-ignore
           const cgia_regs = [
-            0x01,  // [TTTTEEEE] EEEE - enable bits, TTTT - type (0 bckgnd, 1 sprite)
+            0x00,  // MODE bitmask - not used, should be 0
             0x00,  // bckgnd_bank
             0x00,  // sprite_bank
+            0x00, 0x00, 0x00, 0x00, 0x00, // not used
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // not used
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // RASTER unit
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // RASTER interrupts
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // PWM0, PWM1
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // not used
+            0x01,  // PLANES bitmask: [TTTTEEEE] EEEE - enable bits, TTTT - type (0 bckgnd, 1 sprite)
             0x00,  // back_color
-              // --- plane 1
-              ...split16(dl_offset),  // offset - Current DisplayList or SpriteDescriptor table start
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // not used
+            ...split16(dl_offset),  // PLANE0 DL offset
+            0x00, 0x00,  // PLANE1 DL offset
+            0x00, 0x00,  // PLANE2 DL offset
+            0x00, 0x00,  // PLANE3 DL offset
+            // --- plane 0
               // --- background plane regs
               flags,  // flags;
               (384 - columns * column_width) / (2*8),  // border_columns;
               (cell_height - 1),  // row_height;
               0x00,  // stride;
-              0x00, 0x00,  // shared_color[2];
               0x00,  // scroll_x;
               0x00,  // offset_x;
               0x00,  // scroll_y;
               0x00,  // offset_y;
+              0x00, 0x00,  // shared_color[0-1];
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // base_color[2-7];
           ];
           cgia_regs.length = 128; // expand to full 128 CGIA regs
           binary([
