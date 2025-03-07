@@ -593,6 +593,10 @@ if (import.meta.main) {
     );
   }
 
+  console.log(
+    `Generating ${args.format} picture, ${width}x${height}px => ${columns}x${rows}, cell ${column_width}x${cell_height}px`
+  );
+
   // statistics gathering
   {
     console.log("Compute color map...");
@@ -1227,7 +1231,7 @@ if (import.meta.main) {
     case "ham":
       {
         const video_offset = 0x0000;
-        const dl_offset = 0xe800;
+        const dl_offset = 0xf200;
         const dl: [number, string?][] = [];
 
         for (let y = 0; y < row_colors.length; ++y) {
@@ -1255,12 +1259,23 @@ if (import.meta.main) {
           let color: number | undefined;
           // first insert colors to the same slots
           // these do not need a DL instruction, as they are already set
-          while ((color = base_colors.shift())) {
+          while ((color = base_colors.shift()) !== undefined) {
             const prev_index = prev_base_colors.indexOf(color);
             if (prev_index === -1) {
               unmatched.push(color);
             } else {
               new_base_colors[prev_index] = color;
+            }
+          }
+          // if there are more empty slots than new colors, we can reuse more
+          let fill =
+            8 -
+            new_base_colors.filter((i) => i !== undefined).length -
+            unmatched.length;
+          for (let c = 0; fill > 0 && c < prev_base_colors.length; ++c) {
+            if (new_base_colors[c] === undefined) {
+              new_base_colors[c] = prev_base_colors[c];
+              --fill;
             }
           }
           // now insert the rest to empty slots
