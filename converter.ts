@@ -21,6 +21,7 @@ const default_args = {
   threshold: 33.3,
   greys: true,
   type: "header",
+  regs: false,
 };
 
 const supported_palettes = [
@@ -378,6 +379,12 @@ const argDef: ScriptDefinition = {
       name: "type",
       shortName: "x",
       description: `Output type [${supported_types}] (Default: ${default_args.type})`,
+      required: false,
+    },
+    {
+      name: "regs",
+      shortName: "r",
+      description: `Set shared color regs with every MODE line (Default: ${default_args.regs})`,
       required: false,
     },
   ],
@@ -998,6 +1005,11 @@ if (import.meta.main) {
         dl_offset: number,
         dl: [number, string?][]
       ) {
+        console.log(`video_offset = $${toHEX4(video_offset)}`);
+        console.log(`color_offset = $${toHEX4(color_offset)}`);
+        console.log(`bkgnd_offset = $${toHEX4(bkgnd_offset)}`);
+        console.log(`dl_offset = $${toHEX4(dl_offset)}`);
+
         binary([0xff, 0xff]); // XEX header
 
         if (dl.length === 0) return;
@@ -1119,11 +1131,11 @@ if (import.meta.main) {
         let sh_0 = -1;
         let sh_1 = -1;
         for (let i = 0; i < shared_colors.length; ++i) {
-          if (sh_0 !== (shared_colors[i][0] || 0)) {
+          if (args.regs || sh_0 !== (shared_colors[i][0] || 0)) {
             sh_0 = shared_colors[i][0] || 0;
             dl.push([0x84], [sh_0]);
           }
-          if (sh_1 !== (shared_colors[i][1] || 0)) {
+          if (args.regs || sh_1 !== (shared_colors[i][1] || 0)) {
             sh_1 = shared_colors[i][1] || 0;
             dl.push([0x94], [sh_1]);
           }
